@@ -38,14 +38,15 @@ class Ball:
         elif newy < BORDER + self.RADIUS or newy > HEIGHT - BORDER - self.RADIUS:
             self.vy = -self.vy
 
-        elif newx + Ball.RADIUS == WIDTH - Paddle.WIDTH and abs(newy-paddle.y) < paddle.HEIGHT//2 :
+        elif newx + Ball.RADIUS > WIDTH - Paddle.WIDTH and abs(newy-paddle.y) < paddle.HEIGHT//2 :
             self.vx = -self.vx
 
         elif newx - Ball.RADIUS > WIDTH + Ball.RADIUS*10:
             self.x = WIDTH-Paddle.WIDTH-Ball.RADIUS
-            self.y = HEIGHT//2
             self.vx = -self.vx
-            self.vy = -VELOCITY 
+            self.vy = VELOCITY
+            self.y = HEIGHT//2
+            paddle.y = HEIGHT//2
         else :
             self.show(bgColor)
             self.x = self.x + self.vx
@@ -64,8 +65,8 @@ class Paddle:
         global screen
         pygame.draw.rect(screen, colour, pygame.Rect(WIDTH - self.WIDTH, self.y-self.HEIGHT//2, self.WIDTH, self.HEIGHT))
 
-    def update(self,newY):
-        #newY = pygame.mouse.get_pos()[1]
+    def update(self):
+        newY = pygame.mouse.get_pos()[1]
         if newY-self.HEIGHT//2>BORDER \
         	and newY+self.HEIGHT//2<HEIGHT-BORDER :
         	self.show(bgColor)
@@ -98,23 +99,9 @@ paddle.show(fgColor)
 
 clock = pygame.time.Clock()
 
-#sample = open ("game.csv","w")
+sample = open ("game.csv","w")
 
-#print ("x,y,vx,vy,Paddle.y" , file = sample)
-
-pong = pd.read_csv('game.csv')
-pong = pong.drop_duplicates()
-
-X= pong.drop(columns="Paddle.y")
-y = pong['Paddle.y']
-
-from sklearn.neighbors import KNeighborsRegressor
-
-clf = KNeighborsRegressor(n_neighbors=3)
-
-clf = clf.fit(X,y)# requires (x & y), x is input, y is output
-
-df = pd.DataFrame(columns=['x','y','vx','vy'])
+print ("x,y,vx,vy,Paddle.y" , file = sample)
 
 
 
@@ -127,14 +114,10 @@ while True:
     clock.tick(FRAMERATE)
     pygame.display.flip()
 
-    toPredict = df.append({'x' : ballplay.x, 'y' : ballplay.y, 'vx' : ballplay.vx, 'vy': ballplay.vy}, ignore_index=True)
-
-    shouldMove = clf.predict(toPredict)
-    yes = shouldMove[0]
-    paddle.update(yes)
-    print(shouldMove)
+    
+    paddle.update()
     ballplay.update() #always updating ball position
 
-    #print ("{},{},{},{},{}".format(ballplay.x,ballplay.y,ballplay.vx,ballplay.vy,paddle.y), file = sample)
+    print ("{},{},{},{},{}".format(ballplay.x,ballplay.y,ballplay.vx,ballplay.vy,paddle.y), file = sample)
     
 pygame.quit()
