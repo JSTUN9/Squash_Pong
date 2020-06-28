@@ -1,7 +1,8 @@
 # -*- coding:
 import pygame
 import pandas as pd
-
+import math
+import random
 # Variables
 
 WIDTH = 1200
@@ -38,8 +39,12 @@ class Ball:
         elif newy < BORDER + self.RADIUS or newy > HEIGHT - BORDER - self.RADIUS: # collision with top wall
             self.vy = -self.vy
 
-        elif newx + Ball.RADIUS == WIDTH - Paddle.WIDTH and abs(newy-paddle.y) < paddle.HEIGHT//2 : #collide with paddle
-            self.vx = -self.vx
+        elif newx + Ball.RADIUS == WIDTH - Paddle.WIDTH and abs(newy-paddle.y) < Paddle.HEIGHT//2 : #collide with paddle
+            if newx < WIDTH - Paddle.WIDTH//2 :
+                angle = (self.y - paddle.y + paddle.HEIGHT//2 )/ Paddle.HEIGHT * - 90 + 225
+                print (angle)
+                self.vx = int(-VELOCITY*math.cos(Radians))
+                self.vy = int(-VELOCITY*math.sin(Radians))
 
 
         elif newx - Ball.RADIUS > WIDTH + Ball.RADIUS*10: # reset game if passes line
@@ -65,8 +70,8 @@ class Paddle:
         global screen
         pygame.draw.rect(screen, colour, pygame.Rect(WIDTH - self.WIDTH, self.y-self.HEIGHT//2, self.WIDTH, self.HEIGHT))
 
-    def update(self,newY):
-        #newY = pygame.mouse.get_pos()[1]
+    def update(self):
+        newY = pygame.mouse.get_pos()[1]
         if newY-self.HEIGHT//2>BORDER \
         	and newY+self.HEIGHT//2<HEIGHT-BORDER :
         	self.show(bgColor)
@@ -75,7 +80,10 @@ class Paddle:
 
 # Create objejcts 
 
-ballplay = Ball(WIDTH-Paddle.WIDTH-Ball.RADIUS, HEIGHT//2, -VELOCITY, -VELOCITY)
+Angle = random.randint(-45,45)
+Radians = math.radians(Angle)
+print (Radians)
+ballplay = Ball(WIDTH//2, HEIGHT//2, int(-VELOCITY*math.cos(Radians)), int(-VELOCITY*math.sin(Radians)))
 
     
 
@@ -101,25 +109,6 @@ paddle.show(fgColor)
 
 clock = pygame.time.Clock()
 
-#sample = open ("game.csv","w")
-
-#print ("x,y,vx,vy,Paddle.y" , file = sample)
-
-pong = pd.read_csv('game.csv')
-pong = pong.drop_duplicates()
-
-X= pong.drop(columns="Paddle.y")
-y = pong['Paddle.y']
-
-from sklearn.neighbors import KNeighborsRegressor
-
-clf = KNeighborsRegressor(n_neighbors=3)
-
-clf = clf.fit(X,y)# requires (x & y), x is input, y is output
-
-
-df = pd.DataFrame(columns=['x','y','vx','vy'])
-
 
 
 
@@ -132,12 +121,7 @@ while True:
     clock.tick(FRAMERATE)
     pygame.display.flip()
 
-    toPredict = df.append({'x' : ballplay.x, 'y' : ballplay.y, 'vx' : ballplay.vx, 'vy': ballplay.vy}, ignore_index=True)
-
-    shouldMove = clf.predict(toPredict)
-    yes = int(shouldMove[0])
-    paddle.update(yes)
-    print(yes)
+    paddle.update()
     ballplay.update() #always updating ball position
 
     #print ("{},{},{},{},{}".format(ballplay.x,ballplay.y,ballplay.vx,ballplay.vy,paddle.y), file = sample)
